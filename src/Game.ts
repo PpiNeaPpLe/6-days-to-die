@@ -17,7 +17,7 @@ export class Game {
   constructor() {
     // Initialize Three.js components
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.Fog(0x87CEEB, 10, 100);
+    this.scene.fog = new THREE.Fog(0x87CEEB, 20, 300); // Much larger fog distance for 30x world
     
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     
@@ -32,9 +32,9 @@ export class Game {
       container.appendChild(this.renderer.domElement);
     }
 
-    // Initialize game systems
+    // Initialize game systems (order matters!)
     this.world = new World(this.scene);
-    this.player = new Player(this.camera, this.scene);
+    this.player = new Player(this.camera, this.scene, this.world); // Pass world to player
     this.gameTime = new GameTime(this.scene);
     this.skyboxManager = new SkyboxManager(this.scene);
 
@@ -60,7 +60,16 @@ export class Game {
   }
 
   public async replaceTerrainWithModel(modelPath: string): Promise<THREE.Group> {
-    return this.world.replaceGroundWithModel(modelPath);
+    const terrainModel = await this.world.replaceGroundWithModel(modelPath);
+    
+    // After terrain loads, set player spawn position
+    setTimeout(() => {
+      const spawnPosition = this.world.findSpawnPosition();
+      this.player.setSpawnPosition(spawnPosition);
+      console.log('🎯 Player respawned on terrain');
+    }, 500); // Small delay to ensure model is fully processed
+    
+    return terrainModel;
   }
 
   public async loadSkyboxTexture(texturePath: string): Promise<void> {
@@ -110,6 +119,32 @@ export class Game {
     if (timeElement) {
       timeElement.textContent = this.gameTime.getTimeOfDay();
     }
+
+    // Show player position and rotation
+    const playerPos = this.player.getPosition();
+    const yaw = this.player.getYaw();
+    const pitch = this.player.getPitch();
+    
+    const positionInfo = `X: ${playerPos.x.toFixed(1)}, Y: ${playerPos.y.toFixed(1)}, Z: ${playerPos.z.toFixed(1)}`;
+    const rotationInfo = `Yaw: ${(yaw * 180 / Math.PI).toFixed(0)}°, Pitch: ${(pitch * 180 / Math.PI).toFixed(0)}°`;
+    
+    // Update or create position display
+    let posElement = document.getElementById('position');
+    if (!posElement) {
+      posElement = document.createElement('div');
+      posElement.id = 'position';
+      document.getElementById('ui')?.appendChild(posElement);
+    }
+    posElement.textContent = positionInfo;
+
+    // Update or create rotation display
+    let rotElement = document.getElementById('rotation');
+    if (!rotElement) {
+      rotElement = document.createElement('div');
+      rotElement.id = 'rotation';
+      document.getElementById('ui')?.appendChild(rotElement);
+    }
+    rotElement.textContent = rotationInfo;
   }
 
   private onWindowResize(): void {

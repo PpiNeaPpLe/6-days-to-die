@@ -26,9 +26,12 @@
         left: 10px;
         color: white;
         z-index: 100;
-        background: rgba(0,0,0,0.5);
-        padding: 10px;
-        border-radius: 5px;
+        background: rgba(0,0,0,0.7);
+        padding: 15px;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.4;
       }
       
       #crosshair {
@@ -40,19 +43,50 @@
         height: 4px;
         background: white;
         z-index: 100;
+        border-radius: 50%;
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.5);
       }
       
       canvas {
         display: block;
+      }
+
+      .status-good {
+        color: #4CAF50;
+      }
+
+      .status-warning {
+        color: #FFC107;
+      }
+
+      .status-danger {
+        color: #F44336;
       }
     </style>
   </head>
   <body>
     <div id="gameContainer">
       <div id="ui">
-        <div>Health: <span id="health">100</span></div>
-        <div>Time: <span id="gameTime">Day</span></div>
-        <div>Controls: WASD to move, Mouse to look, Click to lock cursor</div>
+        <div>🏥 Health: <span id="health" class="status-good">100</span></div>
+        <div>🕐 Time: <span id="gameTime">Day</span></div>
+        <div>📍 Position: <span id="position">Loading...</span></div>
+        <div>🎯 Rotation: <span id="rotation">Loading...</span></div>
+        <hr style="margin: 10px 0; border-color: rgba(255,255,255,0.3);">
+        <div style="font-size: 12px;">
+          <div>🎮 <strong>Controls:</strong></div>
+          <div>• <strong>Click</strong> to lock cursor</div>
+          <div>• <strong>WASD</strong> to move</div>
+          <div>• <strong>Mouse</strong> to look around</div>
+          <div>• <strong>Space</strong> to jump</div>
+          <div>• <strong>Esc</strong> to unlock cursor</div>
+        </div>
+        <hr style="margin: 10px 0; border-color: rgba(255,255,255,0.3);">
+        <div style="font-size: 11px; color: #888;">
+          <div>🧟 <strong>Zombie Survival 3D</strong></div>
+          <div>Capsule collision system active</div>
+          <div>Human-like head rotation (±60°)</div>
+          <div>30x scaled Minecraft world</div>
+        </div>
       </div>
       <div id="crosshair"></div>
     </div>

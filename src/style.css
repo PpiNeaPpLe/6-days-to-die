@@ -1,0 +1,25 @@
+/* Reset and game-specific styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: 'Courier New', monospace;
+  user-select: none;
+}
+
+/* Loading indicator (if needed later) */
+.loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 24px;
+  z-index: 1000;
+}
+
+/* Game UI elements are already styled in index.html */

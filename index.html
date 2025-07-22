@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zombie Survival 3D</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #000;
+        font-family: Arial, sans-serif;
+      }
+      
+      #gameContainer {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+      
+      #ui {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: white;
+        z-index: 100;
+        background: rgba(0,0,0,0.5);
+        padding: 10px;
+        border-radius: 5px;
+      }
+      
+      #crosshair {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 4px;
+        height: 4px;
+        background: white;
+        z-index: 100;
+      }
+      
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gameContainer">
+      <div id="ui">
+        <div>Health: <span id="health">100</span></div>
+        <div>Time: <span id="gameTime">Day</span></div>
+        <div>Controls: WASD to move, Mouse to look, Click to lock cursor</div>
+      </div>
+      <div id="crosshair"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

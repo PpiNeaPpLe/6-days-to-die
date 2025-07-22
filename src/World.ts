@@ -1,103 +1,107 @@
 import * as THREE from 'three';
+import { ModelLoader } from './ModelLoader';
 
 export class World {
   private scene: THREE.Scene;
+  private modelLoader: ModelLoader;
   private worldSize: number = 50;
-  private blockSize: number = 1;
+  private loadedModels: THREE.Group[] = [];
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
-    this.generateTerrain();
+    this.modelLoader = new ModelLoader();
+    this.setupBasicWorld();
     this.setupLighting();
   }
 
-  private generateTerrain(): void {
-    // Create ground plane
+  private setupBasicWorld(): void {
+    // Create a simple ground plane as fallback
     const groundGeometry = new THREE.PlaneGeometry(this.worldSize, this.worldSize);
     const groundMaterial = new THREE.MeshLambertMaterial({ 
-      color: 0x3a5f3a, // Dark green
+      color: 0x3a5f3a,
       side: THREE.DoubleSide 
     });
     
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = -Math.PI / 2; // Rotate to be horizontal
+    ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
+    ground.name = 'ground';
     this.scene.add(ground);
 
-    // Add some basic terrain features
-    this.generateTrees();
-    this.generateRocks();
+    console.log('🌍 Basic world setup complete. Ready to load GLB models!');
   }
 
-  private generateTrees(): void {
-    const treeCount = 20;
-    
-    for (let i = 0; i < treeCount; i++) {
-      const tree = this.createTree();
+  public async loadWorldModel(modelPath: string, position?: THREE.Vector3, scale?: THREE.Vector3): Promise<THREE.Group> {
+    try {
+      const model = await this.modelLoader.loadModel(modelPath);
       
-      // Random position within world bounds
-      const x = (Math.random() - 0.5) * (this.worldSize - 10);
-      const z = (Math.random() - 0.5) * (this.worldSize - 10);
+      if (position) {
+        model.position.copy(position);
+      }
       
-      tree.position.set(x, 0, z);
-      this.scene.add(tree);
+      if (scale) {
+        model.scale.copy(scale);
+      }
+      
+      this.scene.add(model);
+      this.loadedModels.push(model);
+      
+      console.log(`🏗️ World model loaded: ${modelPath}`);
+      return model;
+    } catch (error) {
+      console.error(`❌ Failed to load world model: ${modelPath}`, error);
+      throw error;
     }
   }
 
-  private createTree(): THREE.Group {
-    const tree = new THREE.Group();
+  public async loadMultipleModels(models: Array<{
+    path: string;
+    position?: THREE.Vector3;
+    scale?: THREE.Vector3;
+    rotation?: THREE.Euler;
+  }>): Promise<THREE.Group[]> {
+    const loadPromises = models.map(async (modelConfig) => {
+      try {
+        const model = await this.modelLoader.loadModel(modelConfig.path);
+        
+        if (modelConfig.position) {
+          model.position.copy(modelConfig.position);
+        }
+        
+        if (modelConfig.scale) {
+          model.scale.copy(modelConfig.scale);
+        }
+        
+        if (modelConfig.rotation) {
+          model.rotation.copy(modelConfig.rotation);
+        }
+        
+        this.scene.add(model);
+        this.loadedModels.push(model);
+        
+        return model;
+      } catch (error) {
+        console.error(`❌ Failed to load model: ${modelConfig.path}`, error);
+        return null;
+      }
+    });
+
+    const results = await Promise.all(loadPromises);
+    const successfulModels = results.filter(model => model !== null) as THREE.Group[];
     
-    // Tree trunk
-    const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.5, 4);
-    const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-    const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-    trunk.position.y = 2;
-    trunk.castShadow = true;
-    tree.add(trunk);
-    
-    // Tree leaves
-    const leavesGeometry = new THREE.SphereGeometry(2.5);
-    const leavesMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 });
-    const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
-    leaves.position.y = 5;
-    leaves.castShadow = true;
-    tree.add(leaves);
-    
-    return tree;
+    console.log(`🎯 Loaded ${successfulModels.length}/${models.length} models successfully`);
+    return successfulModels;
   }
 
-  private generateRocks(): void {
-    const rockCount = 15;
-    
-    for (let i = 0; i < rockCount; i++) {
-      const rock = this.createRock();
-      
-      // Random position
-      const x = (Math.random() - 0.5) * (this.worldSize - 5);
-      const z = (Math.random() - 0.5) * (this.worldSize - 5);
-      
-      rock.position.set(x, 0.5, z);
-      this.scene.add(rock);
+  public replaceGroundWithModel(modelPath: string): Promise<THREE.Group> {
+    // Remove the basic ground plane
+    const ground = this.scene.getObjectByName('ground');
+    if (ground) {
+      this.scene.remove(ground);
     }
-  }
 
-  private createRock(): THREE.Mesh {
-    const size = 0.5 + Math.random() * 1.5;
-    const rockGeometry = new THREE.DodecahedronGeometry(size);
-    const rockMaterial = new THREE.MeshLambertMaterial({ color: 0x696969 });
-    
-    const rock = new THREE.Mesh(rockGeometry, rockMaterial);
-    rock.castShadow = true;
-    rock.receiveShadow = true;
-    
-    // Random rotation
-    rock.rotation.set(
-      Math.random() * Math.PI,
-      Math.random() * Math.PI,
-      Math.random() * Math.PI
-    );
-    
-    return rock;
+    // Load the terrain model
+    return this.loadWorldModel(modelPath);
   }
 
   private setupLighting(): void {
@@ -125,5 +129,17 @@ export class World {
 
   public getWorldSize(): number {
     return this.worldSize;
+  }
+
+  public getLoadedModels(): THREE.Group[] {
+    return [...this.loadedModels];
+  }
+
+  public clearAllModels(): void {
+    this.loadedModels.forEach(model => {
+      this.scene.remove(model);
+    });
+    this.loadedModels = [];
+    console.log('🗑️ All loaded models cleared');
   }
 } 

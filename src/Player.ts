@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { AudioManager } from './AudioManager';
 
 export class Player {
   private camera: THREE.PerspectiveCamera;
@@ -6,6 +7,7 @@ export class Player {
   private velocity: THREE.Vector3;
   private isLocked: boolean = false;
   private health: number = 100;
+  private audioManager: AudioManager;
   
   // Movement settings
   private moveSpeed: number = 10;
@@ -21,11 +23,17 @@ export class Player {
     this.camera = camera;
     this.scene = scene;
     this.velocity = new THREE.Vector3();
+    this.audioManager = new AudioManager();
     
     // Set initial player position (above ground)
     this.camera.position.set(0, 5, 5);
     
     this.setupControls();
+    this.initializeAudio();
+  }
+
+  private async initializeAudio(): Promise<void> {
+    await this.audioManager.createAndLoadBasicSounds();
   }
 
   private setupControls(): void {
@@ -107,10 +115,13 @@ export class Player {
       direction.add(right);
     }
 
-    // Jump
+    // Jump with sound
     if (this.keys['space'] && this.isOnGround) {
       this.velocity.y = this.jumpSpeed;
       this.isOnGround = false;
+      
+      // Play jump sound
+      this.audioManager.createJumpSound();
     }
 
     // Apply movement
@@ -149,5 +160,9 @@ export class Player {
 
   public getPosition(): THREE.Vector3 {
     return this.camera.position.clone();
+  }
+
+  public getAudioManager(): AudioManager {
+    return this.audioManager;
   }
 } 
